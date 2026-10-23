@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Property Management Cost Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="app.js" defer></script>
+  <style type="text/tailwindcss">
+    @theme { --color-plan-a: #2a78d6; --color-plan-b: #eb6834; --color-self: #1baf7a; }
+    /* Let boxes shrink on narrow phone screens. */
+    @layer base { input, select { min-width: 0; } main section > * { min-width: 0; } }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <h1 class="text-2xl font-semibold">Property Management Cost Analysis</h1>
+      <p class="mt-1 text-sm text-slate-500">Calculating the hard costs of property management. What you pay, what goes in your pocket and how that fluctuates over three years.</p>
+      <div class="mt-4 inline-flex rounded-lg border border-slate-300 overflow-hidden text-sm font-medium" id="mode-tabs" role="tablist"></div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <!-- Rent -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5">
+      <h2 class="font-semibold">Rent &amp; Time To Rent</h2>
+      <p class="text-sm text-slate-500 mb-4" id="rent-intro"></p>
+      <!-- One column per plan; app.js builds them -->
+      <div class="grid gap-4 sm:grid-cols-2" id="rent-plans"></div>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <label class="block">
+          <span class="text-sm text-slate-600">Rent increase in year 2</span>
+          <div class="mt-1 flex items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-plan-a">
+            <input id="increase2" type="number" min="0" step="0.5" inputmode="decimal"
+              class="w-full rounded-lg px-3 py-2 text-lg outline-none">
+            <span class="pr-3 text-slate-400">%</span>
+          </div>
+        </label>
+        <label class="block">
+          <span class="text-sm text-slate-600">Rent increase in year 3</span>
+          <div class="mt-1 flex items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-plan-a">
+            <input id="increase3" type="number" min="0" step="0.5" inputmode="decimal"
+              class="w-full rounded-lg px-3 py-2 text-lg outline-none">
+            <span class="pr-3 text-slate-400">%</span>
+          </div>
+        </label>
+      </div>
+      <p class="mt-3 text-sm text-slate-500" id="rent-summary"></p>
+    </section>
+
+    <section class="grid gap-6 md:grid-cols-2">
+      <!-- Mortgage -->
+      <div class="rounded-xl bg-white border border-slate-200 p-5">
+        <h2 class="font-semibold">Mortgage &amp; Fixed Costs</h2>
+        <p class="text-sm text-slate-500 mb-4">What the owner pays each month no matter who manages the property.</p>
+        <div class="space-y-4">
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Monthly mortgage payment</span>
+            <span class="block text-xs text-slate-400">Principal and interest, plus taxes and insurance if they're included</span>
+            <div class="mt-1 flex items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-plan-a">
+              <span class="pl-3 text-slate-400">$</span>
+              <input id="mortgage" type="number" min="0" step="25" inputmode="decimal" placeholder="0"
+                class="w-full rounded-lg px-2 py-2 text-lg outline-none">
+            </div>
+          </label>
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Other fixed monthly costs</span>
+            <span class="block text-xs text-slate-400">Anything else the owner pays every month, rented or not</span>
+            <div class="mt-1 flex items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-plan-a">
+              <span class="pl-3 text-slate-400">$</span>
+              <input id="other-fixed" type="number" min="0" step="25" inputmode="decimal" placeholder="0"
+                class="w-full rounded-lg px-2 py-2 text-lg outline-none">
+            </div>
+          </label>
+          <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+            <p class="font-semibold text-slate-700">What Counts As Other Fixed Costs?</p>
+            <p class="mt-1">Bills the owner pays whether or not the home is rented, that aren't already in the mortgage payment above. For example:</p>
+            <ul class="mt-1 list-disc pl-4 space-y-0.5">
+              <li>HOA or condo dues</li>
+              <li>Property taxes, if paid separately from the mortgage</li>
+              <li>Landlord insurance, if paid separately from the mortgage</li>
+              <li>Utilities the owner covers, like water, sewer, trash or lawn care</li>
+              <li>A home warranty plan</li>
+            </ul>
+            <p class="mt-1">For a yearly bill, divide it by 12. A $2,400 yearly tax bill is $200 a month.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance & cash on hand -->
+      <div class="rounded-xl bg-white border border-slate-200 p-5">
+        <h2 class="font-semibold">Maintenance &amp; Cash On Hand</h2>
+        <p class="mt-1 mb-4 rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+          <span class="font-semibold text-slate-700">Industry-Average Recommendations:</span>
+          set aside 10% to 15% of gross rental income (or about 1% of the property's market value) each year
+          for maintenance and repairs, and keep a cash reserve of 3 to 6 months of fixed operating expenses.
+        </p>
+        <div class="space-y-4">
+          <div>
+            <span class="text-sm font-medium text-slate-700">Maintenance and repairs budget</span>
+            <div class="mt-1 flex gap-2">
+              <select id="maint-method" aria-label="How to work out maintenance"
+                class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
+                <option value="rent">% of rent collected</option>
+                <option value="value">% of property value per year</option>
+              </select>
+              <div class="flex w-24 shrink-0 items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-plan-a">
+                <input id="maint-pct" type="number" min="0" step="0.5" inputmode="decimal" aria-label="Maintenance percent"
+                  class="w-full rounded-lg px-3 py-1.5 text-sm outline-none">
+                <span class="pr-3 text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+          <label class="block" id="value-field" hidden>
+            <span class="text-sm font-medium text-slate-700">Property market value</span>
+            <div class="mt-1 flex items-center rounded-lg border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-plan-a">
+              <span class="pl-3 text-slate-400">$</span>
+              <input id="property-value" type="number" min="0" step="5000" inputmode="decimal" placeholder="0"
+                class="w-full rounded-lg px-2 py-1.5 text-sm outline-none">
+            </div>
+          </label>
+          <p class="text-sm text-slate-600" id="maint-summary"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cash on hand result -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5" id="cash-on-hand"></section>
+
+    <!-- The two fee plans; app.js builds the fields -->
+    <section class="grid gap-6 md:grid-cols-2" id="plans-grid">
+      <div id="plan-a" class="rounded-xl bg-white border-2 border-plan-a/40 p-5"></div>
+      <div id="plan-b" class="rounded-xl bg-white border-2 border-plan-b/40 p-5"></div>
+      <div id="self-card" class="rounded-xl bg-white border-2 border-self/40 p-5" hidden></div>
+    </section>
+
+    <!-- Headline -->
+    <section class="grid gap-4 sm:grid-cols-3" id="headline"></section>
+
+    <!-- Self-management: hours and what they're worth -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5" id="time-cost" hidden></section>
+
+    <!-- Cost of vacancy -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5" id="vacancy"></section>
+
+    <!-- Year-end totals -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 class="font-semibold">Year-End Totals</h2>
+        <div class="flex rounded-lg border border-slate-300 overflow-hidden text-sm" id="year-tabs" role="tablist"></div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead id="totals-head"></thead>
+          <tbody id="totals-body"></tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs text-slate-500" id="diff-note">Difference is the second plan minus the first.</p>
+    </section>
+
+    <!-- Chart -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5">
+      <h2 class="font-semibold">Owner's Cash Flow, Each Year</h2>
+      <p class="text-sm text-slate-500 mb-3" id="chart-note"></p>
+      <div class="h-72"><canvas id="chart-years" role="img" aria-label="Owner take-home by year for each plan"></canvas></div>
+    </section>
+
+    <!-- Monthly costs -->
+    <section class="rounded-xl bg-white border border-slate-200 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 class="font-semibold">Monthly Costs</h2>
+        <div class="flex flex-wrap gap-2">
+          <select id="month-plan" aria-label="Plan" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm"></select>
+          <select id="month-year" aria-label="Year" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm">
+            <option value="0">Year 1 (months 1–12)</option>
+            <option value="1">Year 2 (months 13–24)</option>
+            <option value="2">Year 3 (months 25–36)</option>
+          </select>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm whitespace-nowrap">
+          <thead id="monthly-head"></thead>
+          <tbody id="monthly-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- "What would you rather be doing?" pop-up; app.js fills it -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" hidden></div>
+</body>
+</html>
